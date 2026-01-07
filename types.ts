@@ -39,7 +39,8 @@ export interface Level {
   spawnPos: Point;
   exitPos: Point;
   layoutType: 'PIT' | 'STAIRS' | 'DIVIDE' | 'PILLARS';
-  terrainMap?: string; 
+  terrainMap?: string;
+  hint?: string;
 }
 
 export interface GameState {

@@ -41,12 +41,20 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
 
     switch (level.layoutType) {
       case 'PIT':
-        ctx.fillRect(50, 150, 200, 15);
-        ctx.fillRect(300, 220, 150, 15);
-        ctx.fillRect(450, 260, 150, 15);
-        ctx.fillRect(50, 350, 540, 20);
-        ctx.fillRect(240, 150, 10, 80);
-        ctx.fillRect(530, 260, 10, 100);
+        if (level.id === 1) {
+          // Level 1: "The Blockade" Special Layout (Safe Drop < 60px)
+          ctx.fillRect(100, 300, 300, 15); // Top Platform (y=300)
+          ctx.fillRect(0, 350, 640, 20); // Bottom Floor (y=350, diff=50 which is SAFE)
+          ctx.fillRect(0, 300, 20, 50); // Left Wall bouncer
+        } else {
+          // Standard Pit
+          ctx.fillRect(50, 150, 200, 15);
+          ctx.fillRect(300, 220, 150, 15);
+          ctx.fillRect(450, 260, 150, 15);
+          ctx.fillRect(50, 350, 540, 20);
+          ctx.fillRect(240, 150, 10, 80);
+          ctx.fillRect(530, 260, 10, 100);
+        }
         break;
       case 'STAIRS':
         for (let i = 0; i < 6; i++) {
@@ -56,10 +64,15 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
         break;
       case 'DIVIDE':
         ctx.fillRect(20, 150, 200, 20); // Spawn ledge
-        ctx.fillRect(420, 150, 200, 20); // Far ledge
+
+        // Level 3 Tuning: Smaller gap (100px instead of 200px)
+        const gapSize = level.id === 3 ? 100 : 200;
+        const bridgeStart = 220 + gapSize;
+
+        ctx.fillRect(bridgeStart, 150, 200, 20); // Far ledge
         ctx.fillRect(20, 350, 600, 30);  // Bottom
         ctx.fillRect(210, 150, 10, 200); // Left wall
-        ctx.fillRect(410, 150, 10, 200); // Right wall
+        ctx.fillRect(bridgeStart - 10, 150, 10, 200); // Right wall
         break;
       case 'PILLARS':
         ctx.fillRect(20, 150, 600, 15);
