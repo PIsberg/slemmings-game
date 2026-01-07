@@ -1,6 +1,6 @@
 # Slemmings
 
-An HTML5/Canvas-based puzzle game inspired by the classic **Lemmings**.
+An HTML5/Canvas-based puzzle game rip-off of the classic game **Lemmings**. Available online here: https://pisberg.github.io/slemmings-game/
 
 ![slemmings1-PXL_20260102_123829224](https://github.com/user-attachments/assets/205dcd02-6c4c-4665-8eca-ccff4e93531d)
 ![slemmings2-PXL_20260102_123818265](https://github.com/user-attachments/assets/9cec7cd0-1569-4b87-92df-954bbc1c3d05)
@@ -54,3 +54,6 @@ You have a limited number of skills to assign. Choose wisely!
 ## ☁️ Deployment
 
 This project handles deployment via **GitHub Actions**. Pushing to the `main` branch automatically builds and deploys the game to GitHub Pages.
+
+
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/PIsberg/slemmings-game/badge)](https://scorecard.dev/viewer/?uri=github.com/PIsberg/slemmings-game/)
