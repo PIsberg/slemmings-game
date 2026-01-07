@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { SkillType, GameState, Level } from './types';
-import { SKILL_ICONS, SKILL_COLORS } from './constants';
+import { SKILL_ICONS, SKILL_COLORS, SKILL_DESCRIPTIONS } from './constants';
 import GameCanvas from './components/GameCanvas';
 import { getSlimeLordAdvice } from './services/adviceService';
 
@@ -91,6 +91,7 @@ const App: React.FC = () => {
   });
 
   const [hint, setHint] = useState<string>("Slemmings ready to squish!");
+  const [hoveredSkill, setHoveredSkill] = useState<SkillType | null>(null);
 
   useEffect(() => {
     if (gameState.gameStatus === 'PLAYING' && !gameState.isPaused) {
@@ -246,21 +247,30 @@ const App: React.FC = () => {
           </div>
 
           {(Object.keys(SkillType) as SkillType[]).map((skill) => (
-            <button
-              key={skill}
-              disabled={gameState.skillsLeft[skill] <= 0}
-              onClick={() => setGameState(prev => ({ ...prev, activeSkill: prev.activeSkill === skill ? null : skill }))}
-              className={`relative flex flex-col items-center justify-center p-2 rounded-lg transition-all border-2 shadow-inner
-                ${gameState.activeSkill === skill ? 'border-white brightness-125 scale-110 z-10' : 'border-zinc-700 opacity-80'}
-                ${gameState.skillsLeft[skill] > 0 ? SKILL_COLORS[skill] : 'bg-zinc-800 opacity-30 grayscale'}
-                hover:opacity-100 hover:brightness-110
-              `}
-            >
-              <span className="text-xl text-white drop-shadow-md">{SKILL_ICONS[skill]}</span>
-              <span className="text-[10px] font-bold mt-1 bg-black/40 px-1 rounded-sm text-white">
-                {gameState.skillsLeft[skill]}
-              </span>
-            </button>
+            <div key={skill} className="relative group">
+              {hoveredSkill === skill && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 bg-zinc-900 border border-zinc-500 text-zinc-100 text-[10px] p-2 rounded shadow-lg z-50 text-center pointer-events-none">
+                  {SKILL_DESCRIPTIONS[skill]}
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-zinc-900 border-r border-b border-zinc-500 rotate-45"></div>
+                </div>
+              )}
+              <button
+                disabled={gameState.skillsLeft[skill] <= 0}
+                onClick={() => setGameState(prev => ({ ...prev, activeSkill: prev.activeSkill === skill ? null : skill }))}
+                onMouseEnter={() => setHoveredSkill(skill)}
+                onMouseLeave={() => setHoveredSkill(null)}
+                className={`relative flex flex-col items-center justify-center p-2 rounded-lg transition-all border-2 shadow-inner w-full
+                  ${gameState.activeSkill === skill ? 'border-white brightness-125 scale-110 z-10' : 'border-zinc-700 opacity-80'}
+                  ${gameState.skillsLeft[skill] > 0 ? SKILL_COLORS[skill] : 'bg-zinc-800 opacity-30 grayscale'}
+                  hover:opacity-100 hover:brightness-110
+                `}
+              >
+                <span className="text-xl text-white drop-shadow-md">{SKILL_ICONS[skill]}</span>
+                <span className="text-[10px] font-bold mt-1 bg-black/40 px-1 rounded-sm text-white">
+                  {gameState.skillsLeft[skill]}
+                </span>
+              </button>
+            </div>
           ))}
 
           <button onClick={handleNuke} className="bg-red-950 hover:bg-red-800 border-2 border-red-900 rounded-lg flex items-center justify-center transition-transform active:scale-90">

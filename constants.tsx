@@ -32,3 +32,14 @@ export const SKILL_COLORS: Record<SkillType, string> = {
   [SkillType.MINER]: 'bg-indigo-500',
   [SkillType.DIGGER]: 'bg-green-500',
 };
+
+export const SKILL_DESCRIPTIONS: Record<SkillType, string> = {
+  [SkillType.CLIMBER]: 'CLIMBER: Climbs vertical walls.',
+  [SkillType.FLOATER]: 'FLOATER: Falls slowly to avoid splatting.',
+  [SkillType.BOMBER]: 'BOMBER: Explodes after 5s. BOOM!',
+  [SkillType.BLOCKER]: 'BLOCKER: Stops other Slemmings.',
+  [SkillType.BUILDER]: 'BUILDER: Builds a staircase upwards.',
+  [SkillType.BASHER]: 'BASHER: Digs horizontally.',
+  [SkillType.MINER]: 'MINER: Digs diagonally down.',
+  [SkillType.DIGGER]: 'DIGGER: Digs straight down.',
+};
