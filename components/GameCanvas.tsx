@@ -16,12 +16,14 @@ interface Props {
 const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmingExited, onSlemmingDied, onSkillUsed }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const terrainCanvasRef = useRef<HTMLCanvasElement>(null);
-  
+
   const slemmingsRef = useRef<Slemming[]>([]);
   const requestRef = useRef<number>(null);
   const lastSpawnTime = useRef<number>(0);
   const spawnCountRef = useRef<number>(0);
-  
+
+  const mousePosRef = useRef<{ x: number, y: number } | null>(null);
+
   const gameStateRef = useRef(gameState);
   useEffect(() => {
     gameStateRef.current = gameState;
@@ -36,7 +38,7 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
 
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     ctx.fillStyle = level.terrainColor;
-    
+
     switch (level.layoutType) {
       case 'PIT':
         ctx.fillRect(50, 150, 200, 15);
@@ -62,7 +64,7 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
       case 'PILLARS':
         ctx.fillRect(20, 150, 600, 15);
         for (let i = 0; i < 4; i++) {
-            ctx.fillRect(100 + (i * 120), 165, 30, 185);
+          ctx.fillRect(100 + (i * 120), 165, 30, 185);
         }
         ctx.fillRect(20, 350, 600, 30);
         break;
@@ -94,25 +96,30 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
     ctx.restore();
   }, [level.terrainColor]);
 
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = (e.clientX - rect.left) / (rect.width / GAME_WIDTH);
+    const y = (e.clientY - rect.top) / (rect.height / GAME_HEIGHT);
+    mousePosRef.current = { x, y };
+  };
+
   const handleCanvasClick = (e: React.MouseEvent) => {
     const currentGS = gameStateRef.current;
     if (!currentGS.activeSkill) return;
-    
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    
-    const x = (e.clientX - rect.left) / (rect.width / GAME_WIDTH);
-    const y = (e.clientY - rect.top) / (rect.height / GAME_HEIGHT);
 
-    const target = slemmingsRef.current.find(s => 
-      !s.isDead && !s.isExited && 
+    if (!mousePosRef.current) return;
+    const { x, y } = mousePosRef.current;
+
+    const target = slemmingsRef.current.find(s =>
+      !s.isDead && !s.isExited &&
       Math.abs(s.x - x) < 15 && Math.abs(s.y - y) < 15
     );
 
     if (target) {
-        if (target.applySkill(currentGS.activeSkill)) {
-            onSkillUsed(currentGS.activeSkill);
-        }
+      if (target.applySkill(currentGS.activeSkill)) {
+        onSkillUsed(currentGS.activeSkill);
+      }
     }
   };
 
@@ -134,18 +141,20 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     ctx.drawImage(terrainCanvas, 0, 0);
 
+    // ... (spawn logic)
     const spawnInterval = Math.max(200, (105 - currentGS.releaseRate) * 12);
     if (spawnCountRef.current < level.totalSlemmings && (time - lastSpawnTime.current > spawnInterval)) {
-        const newSlemming = new Slemming(level.spawnPos.x, level.spawnPos.y - 10);
-        slemmingsRef.current.push(newSlemming);
-        spawnCountRef.current++;
-        lastSpawnTime.current = time;
-        onUpdateState({ released: spawnCountRef.current });
+      const newSlemming = new Slemming(level.spawnPos.x, level.spawnPos.y - 10);
+      slemmingsRef.current.push(newSlemming);
+      spawnCountRef.current++;
+      lastSpawnTime.current = time;
+      onUpdateState({ released: spawnCountRef.current });
     }
 
+    // ... (exit and spawn drawing)
     ctx.fillStyle = '#6b4423';
     ctx.fillRect(level.spawnPos.x - 20, level.spawnPos.y - 15, 40, 10);
-    
+
     const pulse = Math.sin(time / 150) * 0.2 + 0.8;
     ctx.shadowBlur = 15 * pulse;
     ctx.shadowColor = '#00f2ff';
@@ -154,13 +163,24 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
     ctx.ellipse(level.exitPos.x, level.exitPos.y, 14 * pulse, 20 * pulse, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
-    
+
     ctx.fillStyle = '#000';
     ctx.beginPath();
     ctx.ellipse(level.exitPos.x, level.exitPos.y, 8, 14, 0, 0, Math.PI * 2);
     ctx.fill();
 
     const terrainData = tCtx.getImageData(0, 0, GAME_WIDTH, GAME_HEIGHT).data;
+
+    // Find target if skill active
+    let targetId: string | null = null;
+    if (currentGS.activeSkill && mousePosRef.current) {
+      const { x, y } = mousePosRef.current;
+      const potentialTarget = slemmingsRef.current.find(s =>
+        !s.isDead && !s.isExited &&
+        Math.abs(s.x - x) < 15 && Math.abs(s.y - y) < 15
+      );
+      if (potentialTarget) targetId = potentialTarget.id;
+    }
 
     slemmingsRef.current.forEach(s => {
       if (s.isDead || s.isExited) return;
@@ -173,6 +193,17 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
       } else {
         ctx.save();
         ctx.translate(s.x, s.y);
+
+        // Draw Target Reticle
+        if (s.id === targetId) {
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+          const size = 10 + Math.sin(time / 100) * 2;
+          ctx.strokeRect(-size, -size - 5, size * 2, size * 2);
+
+          // Draw skill icon cursor hint? logic could go here
+        }
+
         const squish = Math.sin(time / 80 + s.x) * 1.2;
         ctx.fillStyle = '#4eff00';
         ctx.beginPath();
@@ -182,25 +213,25 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
         const faceDir = s.direction > 0 ? 2 : -4;
         ctx.fillRect(faceDir, -4, 2, 2);
         ctx.fillRect(faceDir + (s.direction > 0 ? 2 : -2), -4, 2, 2);
-        
+
         if (s.countdown !== null) {
-            ctx.fillStyle = '#ff3300';
-            ctx.font = 'bold 12px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText(Math.ceil(s.countdown).toString(), 0, -15);
+          ctx.fillStyle = '#ff3300';
+          ctx.font = 'bold 12px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(Math.ceil(s.countdown).toString(), 0, -15);
         }
         if (s.state === SlemmingState.BLOCKING) {
-            ctx.strokeStyle = '#f00';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(-10, -10, 20, 20);
+          ctx.strokeStyle = '#f00';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(-10, -10, 20, 20);
         }
         if (s.state === SlemmingState.FLOATING) {
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(-10, -8);
-            ctx.bezierCurveTo(-10, -20, 10, -20, 10, -8);
-            ctx.stroke();
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(-10, -8);
+          ctx.bezierCurveTo(-10, -20, 10, -20, 10, -8);
+          ctx.stroke();
         }
         ctx.restore();
       }
@@ -218,22 +249,24 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
 
   return (
     <div className="relative border-4 border-zinc-700 rounded-lg overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-black">
-      <canvas 
-        ref={canvasRef} 
-        width={GAME_WIDTH} 
-        height={GAME_HEIGHT} 
+      <canvas
+        ref={canvasRef}
+        width={GAME_WIDTH}
+        height={GAME_HEIGHT}
         onClick={handleCanvasClick}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => { mousePosRef.current = null; }}
         className={`w-full h-auto max-h-[70vh] object-contain ${gameState.activeSkill ? 'cursor-crosshair' : 'cursor-default'}`}
       />
       {gameState.activeSkill && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-md text-white px-4 py-1 rounded-full text-xs font-bold border border-white/20 pointer-events-none animate-pulse">
-              SKILL ACTIVE: {gameState.activeSkill}
-          </div>
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-md text-white px-4 py-1 rounded-full text-xs font-bold border border-white/20 pointer-events-none animate-pulse">
+          SKILL ACTIVE: {gameState.activeSkill}
+        </div>
       )}
-      <canvas 
-        ref={terrainCanvasRef} 
-        width={GAME_WIDTH} 
-        height={GAME_HEIGHT} 
+      <canvas
+        ref={terrainCanvasRef}
+        width={GAME_WIDTH}
+        height={GAME_HEIGHT}
         className="hidden"
       />
     </div>
