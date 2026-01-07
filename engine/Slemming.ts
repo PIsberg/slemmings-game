@@ -22,9 +22,9 @@ export class Slemming {
   }
 
   update(
-    terrainData: Uint8ClampedArray, 
-    width: number, 
-    height: number, 
+    terrainData: Uint8ClampedArray,
+    width: number,
+    height: number,
     exitPos: Point,
     allSlemmings: Slemming[],
     onTerrainChange: (x: number, y: number, radius: number, remove: boolean) => void
@@ -41,7 +41,7 @@ export class Slemming {
 
     // Handle Bomber countdown
     if (this.countdown !== null) {
-      this.countdown -= 0.016; 
+      this.countdown -= 0.016;
       if (this.countdown <= 0) {
         this.explode(onTerrainChange);
         return;
@@ -62,8 +62,11 @@ export class Slemming {
       case SlemmingState.BUILDING:
         this.handleBuilding(terrainData, width, height, onTerrainChange);
         break;
+      case SlemmingState.SHRUGGING:
+        this.handleShrugging();
+        break;
       case SlemmingState.DIGGING:
-        this.handleDigging(onTerrainChange);
+        this.handleDigging(onTerrainChange, terrainData, width);
         break;
       case SlemmingState.BASHING:
         this.handleBashing(terrainData, width, onTerrainChange);
@@ -83,7 +86,7 @@ export class Slemming {
     if (ix < 0 || ix >= width || iy < 0) return false;
     // Map bounds check
     if (iy >= 398) return true; // Solid floor at bottom
-    
+
     const index = (iy * width + ix) * 4;
     return terrainData[index + 3] > 128; // Alpha channel check for terrain
   }
@@ -91,11 +94,11 @@ export class Slemming {
   private handleFalling(terrainData: Uint8ClampedArray, width: number, height: number) {
     const fallSpeed = this.state === SlemmingState.FLOATING ? 1.0 : 2.0;
     const nextY = this.y + fallSpeed;
-    
+
     // Check multiple points at bottom for collision
-    const hit = this.isSolid(this.x, nextY, terrainData, width) || 
-                this.isSolid(this.x - 2, nextY, terrainData, width) || 
-                this.isSolid(this.x + 2, nextY, terrainData, width);
+    const hit = this.isSolid(this.x, nextY, terrainData, width) ||
+      this.isSolid(this.x - 2, nextY, terrainData, width) ||
+      this.isSolid(this.x + 2, nextY, terrainData, width);
 
     if (hit) {
       if (this.fallDistance > MAX_FALL_DISTANCE && this.state !== SlemmingState.FLOATING) {
@@ -105,7 +108,7 @@ export class Slemming {
         this.fallDistance = 0;
         // Snap to top of solid
         while (this.isSolid(this.x, this.y, terrainData, width) && this.y > 0) {
-            this.y -= 1;
+          this.y -= 1;
         }
       }
     } else {
@@ -116,30 +119,30 @@ export class Slemming {
   }
 
   private handleWalking(
-    terrainData: Uint8ClampedArray, 
-    width: number, 
-    height: number, 
+    terrainData: Uint8ClampedArray,
+    width: number,
+    height: number,
     allSlemmings: Slemming[],
     onTerrainChange: (x: number, y: number, radius: number, remove: boolean) => void
   ) {
     // Check if we should start falling
-    if (!this.isSolid(this.x, this.y + 2, terrainData, width) && 
-        !this.isSolid(this.x - 2, this.y + 2, terrainData, width) && 
-        !this.isSolid(this.x + 2, this.y + 2, terrainData, width)) {
+    if (!this.isSolid(this.x, this.y + 2, terrainData, width) &&
+      !this.isSolid(this.x - 2, this.y + 2, terrainData, width) &&
+      !this.isSolid(this.x + 2, this.y + 2, terrainData, width)) {
       this.state = this.skills.has(SkillType.FLOATER) ? SlemmingState.FLOATING : SlemmingState.FALLING;
       return;
     }
 
     // Horizontal Movement
     const nextX = this.x + (this.direction * WALK_SPEED);
-    
+
     // Blocker Check
     for (const s of allSlemmings) {
       if (s !== this && s.state === SlemmingState.BLOCKING) {
         if (Math.abs(s.x - this.x) < 8 && Math.abs(s.y - this.y) < 5) {
-            this.direction *= -1;
-            this.x += this.direction * 3;
-            return;
+          this.direction *= -1;
+          this.x += this.direction * 3;
+          return;
         }
       }
     }
@@ -155,7 +158,7 @@ export class Slemming {
       this.y -= stepUp;
       // Gravity adjustment: stay glued to slopes
       if (!this.isSolid(this.x, this.y + 1, terrainData, width)) {
-          this.y += 1;
+        this.y += 1;
       }
     } else {
       // Hit a wall
@@ -170,17 +173,17 @@ export class Slemming {
   private handleClimbing(terrainData: Uint8ClampedArray, width: number, height: number) {
     const nextY = this.y - 1.0;
     const aheadX = this.x + this.direction * 3;
-    
+
     // Check if there is still a wall to climb
     if (!this.isSolid(aheadX, nextY, terrainData, width) && !this.isSolid(aheadX, this.y, terrainData, width)) {
-        // Reached the top!
-        this.y = nextY;
-        this.x += this.direction * 4;
-        this.state = SlemmingState.WALKING;
+      // Reached the top!
+      this.y = nextY;
+      this.x += this.direction * 4;
+      this.state = SlemmingState.WALKING;
     } else if (this.y < 0) {
-        this.isDead = true;
+      this.isDead = true;
     } else {
-        this.y = nextY;
+      this.y = nextY;
     }
   }
 
@@ -188,52 +191,68 @@ export class Slemming {
     this.actionProgress++;
     // Building animation logic
     if (this.actionProgress % 20 === 0) {
-        const stepX = this.x + (this.direction * 8);
-        const stepY = this.y;
-        onTerrainChange(stepX, stepY, 5, false);
-        this.x += this.direction * 4;
-        this.y -= 2;
-        
-        if (this.actionProgress > 20 * 12) { 
-            this.state = SlemmingState.WALKING;
-            this.actionProgress = 0;
-        }
+      const stepX = this.x + (this.direction * 8);
+      const stepY = this.y;
+      onTerrainChange(stepX, stepY, 5, false);
+      this.x += this.direction * 4;
+      this.y -= 2;
+
+      if (this.actionProgress > 20 * 12) {
+        this.state = SlemmingState.SHRUGGING;
+        this.actionProgress = 0;
+      }
     }
   }
 
-  private handleDigging(onTerrainChange: (x: number, y: number, radius: number, remove: boolean) => void) {
-      this.actionProgress++;
-      if (this.actionProgress % 15 === 0) {
-          onTerrainChange(this.x, this.y + 4, 10, true);
-          this.y += 3;
-      }
+  private handleShrugging() {
+    this.actionProgress++;
+    if (this.actionProgress > 120) { // 2 seconds (assuming 60fps)
+      this.state = SlemmingState.WALKING;
+      this.actionProgress = 0;
+    }
+  }
+
+  private handleDigging(onTerrainChange: (x: number, y: number, radius: number, remove: boolean) => void, terrainData: Uint8ClampedArray, width: number) {
+    this.actionProgress++;
+
+    // Check if we ran out of ground (dug through)
+    if (!this.isSolid(this.x, this.y + 5, terrainData, width)) {
+      this.state = SlemmingState.FALLING;
+      this.actionProgress = 0;
+      return;
+    }
+
+    if (this.actionProgress % 15 === 0) {
+      onTerrainChange(this.x, this.y + 4, 10, true);
+      this.y += 3;
+    }
   }
 
   private handleBashing(terrainData: Uint8ClampedArray, width: number, onTerrainChange: (x: number, y: number, radius: number, remove: boolean) => void) {
-      this.actionProgress++;
-      if (this.actionProgress % 10 === 0) {
-          const checkX = this.x + this.direction * 6;
-          // Stop if we hit air
-          if (!this.isSolid(checkX, this.y, terrainData, width)) {
-              this.state = SlemmingState.WALKING;
-              return;
-          }
-          onTerrainChange(checkX, this.y - 2, 12, true);
-          this.x += this.direction * 2;
+    this.actionProgress++;
+    if (this.actionProgress % 10 === 0) {
+      const checkX = this.x + this.direction * 6;
+      // Stop if we hit air
+      if (!this.isSolid(checkX, this.y, terrainData, width)) {
+        this.state = SlemmingState.WALKING;
+        return;
       }
-      if (this.actionProgress > 600) this.state = SlemmingState.WALKING;
+      onTerrainChange(checkX, this.y - 2, 12, true);
+      this.x += this.direction * 2;
+    }
+    if (this.actionProgress > 600) this.state = SlemmingState.WALKING;
   }
 
   private handleMining(terrainData: Uint8ClampedArray, width: number, onTerrainChange: (x: number, y: number, radius: number, remove: boolean) => void) {
-      this.actionProgress++;
-      if (this.actionProgress % 12 === 0) {
-          const checkX = this.x + this.direction * 6;
-          const checkY = this.y + 4;
-          onTerrainChange(checkX, checkY, 12, true);
-          this.x += this.direction * 2;
-          this.y += 1;
-      }
-      if (this.actionProgress > 600) this.state = SlemmingState.WALKING;
+    this.actionProgress++;
+    if (this.actionProgress % 12 === 0) {
+      const checkX = this.x + this.direction * 6;
+      const checkY = this.y + 4;
+      onTerrainChange(checkX, checkY, 12, true);
+      this.x += this.direction * 2;
+      this.y += 1;
+    }
+    if (this.actionProgress > 600) this.state = SlemmingState.WALKING;
   }
 
   private explode(onTerrainChange: (x: number, y: number, radius: number, remove: boolean) => void) {
@@ -251,8 +270,8 @@ export class Slemming {
         return true;
       case SkillType.BOMBER:
         if (this.countdown === null) {
-            this.countdown = 5;
-            return true;
+          this.countdown = 5;
+          return true;
         }
         break;
       case SkillType.BLOCKER:
@@ -262,16 +281,30 @@ export class Slemming {
         }
         break;
       case SkillType.BUILDER:
-        if (this.state === SlemmingState.WALKING) {
+        if (this.state === SlemmingState.WALKING || this.state === SlemmingState.SHRUGGING) {
           this.state = SlemmingState.BUILDING;
           this.actionProgress = 0;
           return true;
         }
         break;
+        break;
       case SkillType.DIGGER:
         if (this.state === SlemmingState.WALKING) {
           this.state = SlemmingState.DIGGING;
           this.actionProgress = 0;
+          return true;
+        }
+        break;
+      case SkillType.WALKER:
+        // Walker: Revert to walking from almost any state
+        if (this.state !== SlemmingState.FALLING &&
+          this.state !== SlemmingState.EXITED &&
+          this.state !== SlemmingState.DEAD) {
+
+          this.state = SlemmingState.WALKING;
+          this.actionProgress = 0;
+          this.countdown = null; // Cancel bomber if active? maybe not standard but helpful. Standard walker doesn't usually cancel bomber.
+          // Let's stick to state reversion.
           return true;
         }
         break;

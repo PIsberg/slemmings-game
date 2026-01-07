@@ -17,7 +17,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 0, [SkillType.FLOATER]: 0, [SkillType.BOMBER]: 5,
             [SkillType.BLOCKER]: 5, [SkillType.BUILDER]: 0, [SkillType.BASHER]: 0,
-            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0,
+            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0, [SkillType.WALKER]: 20,
         },
     },
     {
@@ -35,25 +35,25 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 0, [SkillType.FLOATER]: 10, [SkillType.BOMBER]: 0,
             [SkillType.BLOCKER]: 0, [SkillType.BUILDER]: 0, [SkillType.BASHER]: 0,
-            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0,
+            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0, [SkillType.WALKER]: 20,
         },
     },
     {
         id: 3,
         name: "Level 3: Bridging the Gap",
-        hint: "BUILDERS can create stairs to reach high places.",
+        hint: "Builders can create stairs. Build a bridge to reach the high ground!",
         spawnRate: 50,
         totalSlemmings: 20,
         toSave: 15,
         timeLimit: 300,
         terrainColor: '#152a4d',
-        spawnPos: { x: 50, y: 140 },
-        exitPos: { x: 550, y: 140 },
+        spawnPos: { x: 50, y: 340 },
+        exitPos: { x: 550, y: 240 },
         layoutType: 'DIVIDE',
         skills: {
-            [SkillType.CLIMBER]: 0, [SkillType.FLOATER]: 5, [SkillType.BOMBER]: 0,
+            [SkillType.CLIMBER]: 0, [SkillType.FLOATER]: 5, [SkillType.BOMBER]: 5,
             [SkillType.BLOCKER]: 5, [SkillType.BUILDER]: 20, [SkillType.BASHER]: 0,
-            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0,
+            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0, [SkillType.WALKER]: 20,
         },
     },
 
@@ -72,7 +72,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 5, [SkillType.FLOATER]: 10, [SkillType.BOMBER]: 5,
             [SkillType.BLOCKER]: 5, [SkillType.BUILDER]: 10, [SkillType.BASHER]: 5,
-            [SkillType.MINER]: 5, [SkillType.DIGGER]: 5,
+            [SkillType.MINER]: 5, [SkillType.DIGGER]: 5, [SkillType.WALKER]: 20,
         },
     },
     {
@@ -89,7 +89,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 0, [SkillType.FLOATER]: 5, [SkillType.BOMBER]: 0,
             [SkillType.BLOCKER]: 5, [SkillType.BUILDER]: 0, [SkillType.BASHER]: 0,
-            [SkillType.MINER]: 0, [SkillType.DIGGER]: 20,
+            [SkillType.MINER]: 0, [SkillType.DIGGER]: 20, [SkillType.WALKER]: 20,
         },
     },
     {
@@ -106,7 +106,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 20, [SkillType.FLOATER]: 20, [SkillType.BOMBER]: 0,
             [SkillType.BLOCKER]: 0, [SkillType.BUILDER]: 0, [SkillType.BASHER]: 0,
-            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0,
+            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0, [SkillType.WALKER]: 20,
         },
     },
     // --- MEDIUM LEVELS (7-12) ---
@@ -124,7 +124,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 5, [SkillType.FLOATER]: 5, [SkillType.BOMBER]: 5,
             [SkillType.BLOCKER]: 5, [SkillType.BUILDER]: 15, [SkillType.BASHER]: 5,
-            [SkillType.MINER]: 5, [SkillType.DIGGER]: 5,
+            [SkillType.MINER]: 5, [SkillType.DIGGER]: 5, [SkillType.WALKER]: 20,
         },
     },
     {
@@ -141,7 +141,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 0, [SkillType.FLOATER]: 50, [SkillType.BOMBER]: 0,
             [SkillType.BLOCKER]: 2, [SkillType.BUILDER]: 0, [SkillType.BASHER]: 0,
-            [SkillType.MINER]: 0, [SkillType.DIGGER]: 10,
+            [SkillType.MINER]: 0, [SkillType.DIGGER]: 10, [SkillType.WALKER]: 20,
         },
     },
     {
@@ -158,7 +158,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 10, [SkillType.FLOATER]: 10, [SkillType.BOMBER]: 10,
             [SkillType.BLOCKER]: 10, [SkillType.BUILDER]: 20, [SkillType.BASHER]: 10,
-            [SkillType.MINER]: 10, [SkillType.DIGGER]: 10,
+            [SkillType.MINER]: 10, [SkillType.DIGGER]: 10, [SkillType.WALKER]: 20,
         },
     },
     {
@@ -175,7 +175,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 1, [SkillType.FLOATER]: 1, [SkillType.BOMBER]: 0,
             [SkillType.BLOCKER]: 1, [SkillType.BUILDER]: 2, [SkillType.BASHER]: 0,
-            [SkillType.MINER]: 0, [SkillType.DIGGER]: 1,
+            [SkillType.MINER]: 0, [SkillType.DIGGER]: 1, [SkillType.WALKER]: 20,
         },
     },
     // --- HARD LEVELS (11-15) ---
@@ -193,7 +193,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 5, [SkillType.FLOATER]: 50, [SkillType.BOMBER]: 5,
             [SkillType.BLOCKER]: 2, [SkillType.BUILDER]: 2, [SkillType.BASHER]: 2,
-            [SkillType.MINER]: 2, [SkillType.DIGGER]: 2,
+            [SkillType.MINER]: 2, [SkillType.DIGGER]: 2, [SkillType.WALKER]: 20,
         },
     },
     {
@@ -210,7 +210,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 0, [SkillType.FLOATER]: 0, [SkillType.BOMBER]: 5,
             [SkillType.BLOCKER]: 5, [SkillType.BUILDER]: 5, [SkillType.BASHER]: 10,
-            [SkillType.MINER]: 10, [SkillType.DIGGER]: 10,
+            [SkillType.MINER]: 10, [SkillType.DIGGER]: 10, [SkillType.WALKER]: 20,
         },
     },
     {
@@ -227,7 +227,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 5, [SkillType.FLOATER]: 0, [SkillType.BOMBER]: 5,
             [SkillType.BLOCKER]: 2, [SkillType.BUILDER]: 20, [SkillType.BASHER]: 2,
-            [SkillType.MINER]: 2, [SkillType.DIGGER]: 2,
+            [SkillType.MINER]: 2, [SkillType.DIGGER]: 2, [SkillType.WALKER]: 20,
         },
     },
     {
@@ -244,7 +244,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 0, [SkillType.FLOATER]: 60, [SkillType.BOMBER]: 0,
             [SkillType.BLOCKER]: 0, [SkillType.BUILDER]: 0, [SkillType.BASHER]: 0,
-            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0,
+            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0, [SkillType.WALKER]: 20,
         },
     },
     {
@@ -261,7 +261,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 10, [SkillType.FLOATER]: 0, [SkillType.BOMBER]: 2,
             [SkillType.BLOCKER]: 2, [SkillType.BUILDER]: 5, [SkillType.BASHER]: 10,
-            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0,
+            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0, [SkillType.WALKER]: 20,
         },
     },
     // --- EXPERT LEVELS (16-20) ---
@@ -279,7 +279,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 0, [SkillType.FLOATER]: 25, [SkillType.BOMBER]: 0,
             [SkillType.BLOCKER]: 0, [SkillType.BUILDER]: 10, [SkillType.BASHER]: 0,
-            [SkillType.MINER]: 5, [SkillType.DIGGER]: 0,
+            [SkillType.MINER]: 5, [SkillType.DIGGER]: 0, [SkillType.WALKER]: 20,
         },
     },
     {
@@ -296,7 +296,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 0, [SkillType.FLOATER]: 0, [SkillType.BOMBER]: 10,
             [SkillType.BLOCKER]: 5, [SkillType.BUILDER]: 0, [SkillType.BASHER]: 0,
-            [SkillType.MINER]: 10, [SkillType.DIGGER]: 10,
+            [SkillType.MINER]: 10, [SkillType.DIGGER]: 10, [SkillType.WALKER]: 20,
         },
     },
     {
@@ -313,7 +313,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 10, [SkillType.FLOATER]: 0, [SkillType.BOMBER]: 0,
             [SkillType.BLOCKER]: 0, [SkillType.BUILDER]: 30, [SkillType.BASHER]: 0,
-            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0,
+            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0, [SkillType.WALKER]: 20,
         },
     },
     {
@@ -330,7 +330,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 0, [SkillType.FLOATER]: 10, [SkillType.BOMBER]: 0,
             [SkillType.BLOCKER]: 0, [SkillType.BUILDER]: 10, [SkillType.BASHER]: 0,
-            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0,
+            [SkillType.MINER]: 0, [SkillType.DIGGER]: 0, [SkillType.WALKER]: 20,
         },
     },
     {
@@ -347,7 +347,7 @@ export const LEVELS: Level[] = [
         skills: {
             [SkillType.CLIMBER]: 10, [SkillType.FLOATER]: 20, [SkillType.BOMBER]: 20,
             [SkillType.BLOCKER]: 10, [SkillType.BUILDER]: 30, [SkillType.BASHER]: 10,
-            [SkillType.MINER]: 10, [SkillType.DIGGER]: 10,
+            [SkillType.MINER]: 10, [SkillType.DIGGER]: 10, [SkillType.WALKER]: 20,
         },
     },
 ];

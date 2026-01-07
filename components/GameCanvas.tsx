@@ -7,13 +7,14 @@ import { Level, GameState, SkillType, SlemmingState } from '../types';
 interface Props {
   level: Level;
   gameState: GameState;
+  gameSpeed: number;
   onUpdateState: (updates: Partial<GameState>) => void;
   onSlemmingExited: () => void;
   onSlemmingDied: () => void;
   onSkillUsed: (skill: SkillType) => void;
 }
 
-const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmingExited, onSlemmingDied, onSkillUsed }) => {
+const GameCanvas: React.FC<Props> = ({ level, gameState, gameSpeed = 1, onUpdateState, onSlemmingExited, onSlemmingDied, onSkillUsed }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const terrainCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -63,16 +64,23 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
         ctx.fillRect(50, 360, 540, 20);
         break;
       case 'DIVIDE':
-        ctx.fillRect(20, 150, 200, 20); // Spawn ledge
+        if (level.id === 3) {
+          // Level 3: "Step Up" - Long walk then build up (Builder needed at end)
+          ctx.fillRect(20, 350, 480, 20); // Long Floor (y=350)
+          ctx.fillRect(500, 250, 120, 20); // High Exit Platform (y=250)
+          // No walls, just a height difference
+        } else {
+          ctx.fillRect(20, 150, 200, 20); // Spawn ledge
 
-        // Level 3 Tuning: Smaller gap (100px instead of 200px)
-        const gapSize = level.id === 3 ? 100 : 200;
-        const bridgeStart = 220 + gapSize;
+          // Level 3 Tuning: Smaller gap (100px instead of 200px)
+          const gapSize = level.id === 3 ? 100 : 200; // Level 3 uses special logic above now, but keeping safe fallback
+          const bridgeStart = 220 + gapSize;
 
-        ctx.fillRect(bridgeStart, 150, 200, 20); // Far ledge
-        ctx.fillRect(20, 350, 600, 30);  // Bottom
-        ctx.fillRect(210, 150, 10, 200); // Left wall
-        ctx.fillRect(bridgeStart - 10, 150, 10, 200); // Right wall
+          ctx.fillRect(bridgeStart, 150, 200, 20); // Far ledge
+          ctx.fillRect(20, 350, 600, 30);  // Bottom
+          ctx.fillRect(210, 150, 10, 200); // Left wall
+          ctx.fillRect(bridgeStart - 10, 150, 10, 200); // Right wall
+        }
         break;
       case 'PILLARS':
         ctx.fillRect(20, 150, 600, 15);
@@ -130,8 +138,15 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
     );
 
     if (target) {
-      if (target.applySkill(currentGS.activeSkill)) {
-        onSkillUsed(currentGS.activeSkill);
+      if (currentGS.activeSkill) {
+        if (target.applySkill(currentGS.activeSkill)) {
+          onSkillUsed(currentGS.activeSkill);
+        }
+      } else {
+        // Unblock: click blocker to resume walking
+        if (target.state === SlemmingState.BLOCKING) {
+          target.state = SlemmingState.WALKING;
+        }
       }
     }
   };
@@ -154,14 +169,55 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     ctx.drawImage(terrainCanvas, 0, 0);
 
-    // ... (spawn logic)
-    const spawnInterval = Math.max(200, (105 - currentGS.releaseRate) * 12);
-    if (spawnCountRef.current < level.totalSlemmings && (time - lastSpawnTime.current > spawnInterval)) {
-      const newSlemming = new Slemming(level.spawnPos.x, level.spawnPos.y - 10);
-      slemmingsRef.current.push(newSlemming);
-      spawnCountRef.current++;
-      lastSpawnTime.current = time;
-      onUpdateState({ released: spawnCountRef.current });
+
+    // Speed Loop
+    // Speed Loop
+    const terrainData = tCtx.getImageData(0, 0, GAME_WIDTH, GAME_HEIGHT).data;
+
+    if (!gameSpeed || gameSpeed < 1) console.warn("Invalid gameSpeed:", gameSpeed);
+
+    for (let i = 0; i < (gameSpeed || 1); i++) {
+      // Spawn Logic (Frame-based for FF compatibility)
+      // Convert release rate logic to frame countdown (assuming ~60fps, 16ms per frame)
+      // Old Formula: (105 - rate) * 12 ms
+      // New: ((105 - rate) * 12) / 16 frames
+      const spawnDelayFrames = Math.max(10, ((105 - currentGS.releaseRate) * 12) / 16);
+
+      // We use lastSpawnTime ref as a "frames since last spawn" counter now
+      // Initialize/Reset handling is implied: it increments until threshold
+      lastSpawnTime.current += 1; // Increment by 1 tick
+
+      if (spawnCountRef.current < level.totalSlemmings && lastSpawnTime.current > spawnDelayFrames) {
+        const newSlemming = new Slemming(level.spawnPos.x, level.spawnPos.y - 10);
+        slemmingsRef.current.push(newSlemming);
+        spawnCountRef.current++;
+        lastSpawnTime.current = 0; // Reset counter
+        onUpdateState({ released: spawnCountRef.current });
+      }
+
+      slemmingsRef.current.forEach(s => {
+        if (s.isDead || s.isExited) return;
+        s.update(terrainData, GAME_WIDTH, GAME_HEIGHT, level.exitPos, slemmingsRef.current, modifyTerrain);
+
+        if (s.isExited) {
+          onSlemmingExited();
+        } else if (s.isDead) {
+          onSlemmingDied();
+        }
+      });
+    }
+
+    // DRAWING (Once per frame)
+
+    // Find target (for reticle)
+    let targetId: string | null = null;
+    if (mousePosRef.current) {
+      const { x, y } = mousePosRef.current;
+      const potentialTarget = slemmingsRef.current.find(s =>
+        !s.isDead && !s.isExited &&
+        Math.abs(s.x - x) < 15 && Math.abs(s.y - y) < 15
+      );
+      if (potentialTarget) targetId = potentialTarget.id;
     }
 
     // ... (exit and spawn drawing)
@@ -182,72 +238,59 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
     ctx.ellipse(level.exitPos.x, level.exitPos.y, 8, 14, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    const terrainData = tCtx.getImageData(0, 0, GAME_WIDTH, GAME_HEIGHT).data;
-
-    // Find target if skill active
-    let targetId: string | null = null;
-    if (currentGS.activeSkill && mousePosRef.current) {
-      const { x, y } = mousePosRef.current;
-      const potentialTarget = slemmingsRef.current.find(s =>
-        !s.isDead && !s.isExited &&
-        Math.abs(s.x - x) < 15 && Math.abs(s.y - y) < 15
-      );
-      if (potentialTarget) targetId = potentialTarget.id;
-    }
-
+    // Draw Slemmings
     slemmingsRef.current.forEach(s => {
       if (s.isDead || s.isExited) return;
-      s.update(terrainData, GAME_WIDTH, GAME_HEIGHT, level.exitPos, slemmingsRef.current, modifyTerrain);
+      ctx.save();
+      // ... (draw logic)
+      ctx.translate(s.x, s.y);
 
-      if (s.isExited) {
-        onSlemmingExited();
-      } else if (s.isDead) {
-        onSlemmingDied();
-      } else {
-        ctx.save();
-        ctx.translate(s.x, s.y);
+      // Draw Target Reticle
+      if (s.id === targetId) {
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        const size = 10 + Math.sin(time / 100) * 2;
+        ctx.strokeRect(-size, -size - 5, size * 2, size * 2);
 
-        // Draw Target Reticle
-        if (s.id === targetId) {
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 1;
-          const size = 10 + Math.sin(time / 100) * 2;
-          ctx.strokeRect(-size, -size - 5, size * 2, size * 2);
-
-          // Draw skill icon cursor hint? logic could go here
-        }
-
-        const squish = Math.sin(time / 80 + s.x) * 1.2;
-        ctx.fillStyle = '#4eff00';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 6 + squish, 7 - squish, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        const faceDir = s.direction > 0 ? 2 : -4;
-        ctx.fillRect(faceDir, -4, 2, 2);
-        ctx.fillRect(faceDir + (s.direction > 0 ? 2 : -2), -4, 2, 2);
-
-        if (s.countdown !== null) {
-          ctx.fillStyle = '#ff3300';
-          ctx.font = 'bold 12px monospace';
-          ctx.textAlign = 'center';
-          ctx.fillText(Math.ceil(s.countdown).toString(), 0, -15);
-        }
-        if (s.state === SlemmingState.BLOCKING) {
-          ctx.strokeStyle = '#f00';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(-10, -10, 20, 20);
-        }
-        if (s.state === SlemmingState.FLOATING) {
-          ctx.strokeStyle = '#fff';
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(-10, -8);
-          ctx.bezierCurveTo(-10, -20, 10, -20, 10, -8);
-          ctx.stroke();
-        }
-        ctx.restore();
+        // Draw skill icon cursor hint? logic could go here
       }
+
+      const squish = Math.sin(time / 80 + s.x) * 1.2;
+      ctx.fillStyle = '#4eff00';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 6 + squish, 7 - squish, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      const faceDir = s.direction > 0 ? 2 : -4;
+      ctx.fillRect(faceDir, -4, 2, 2);
+      ctx.fillRect(faceDir + (s.direction > 0 ? 2 : -2), -4, 2, 2);
+
+      if (s.state === SlemmingState.SHRUGGING) {
+        ctx.font = '10px monospace';
+        ctx.fillStyle = '#00FFFF';
+        ctx.fillText('?', 2, -10);
+      }
+
+      if (s.countdown !== null) {
+        ctx.fillStyle = '#ff3300';
+        ctx.font = 'bold 12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(Math.ceil(s.countdown).toString(), 0, -15);
+      }
+      if (s.state === SlemmingState.BLOCKING) {
+        ctx.strokeStyle = '#f00';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-10, -10, 20, 20);
+      }
+      if (s.state === SlemmingState.FLOATING) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-10, -8);
+        ctx.bezierCurveTo(-10, -20, 10, -20, 10, -8);
+        ctx.stroke();
+      }
+      ctx.restore();
     });
 
     requestRef.current = requestAnimationFrame(update);
@@ -260,6 +303,14 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
     };
   }, [level.id]);
 
+  // Cursor logic
+  const cursorClass = gameState.activeSkill
+    ? 'cursor-crosshair'
+    : (mousePosRef.current && slemmingsRef.current.some(s =>
+      !s.isDead && !s.isExited && s.state === SlemmingState.BLOCKING &&
+      Math.abs(s.x - mousePosRef.current!.x) < 15 && Math.abs(s.y - mousePosRef.current!.y) < 15
+    )) ? 'cursor-pointer' : 'cursor-default';
+
   return (
     <div className="relative border-4 border-zinc-700 rounded-lg overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] bg-black">
       <canvas
@@ -269,7 +320,7 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, onUpdateState, onSlemmi
         onClick={handleCanvasClick}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => { mousePosRef.current = null; }}
-        className={`w-full h-auto max-h-[70vh] object-contain ${gameState.activeSkill ? 'cursor-crosshair' : 'cursor-default'}`}
+        className={`w-full h-auto max-h-[70vh] object-contain ${cursorClass}`}
       />
       {gameState.activeSkill && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-md text-white px-4 py-1 rounded-full text-xs font-bold border border-white/20 pointer-events-none animate-pulse">

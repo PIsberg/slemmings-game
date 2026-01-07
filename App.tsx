@@ -28,6 +28,7 @@ const App: React.FC = () => {
   const [hint, setHint] = useState<string>("Slemmings ready to squish!");
   const [hoveredSkill, setHoveredSkill] = useState<SkillType | null>(null);
   const [menuView, setMenuView] = useState<'SPLASH' | 'LEVELS'>('SPLASH');
+  const [gameSpeed, setGameSpeed] = useState<1 | 2 | 4>(1);
 
   useEffect(() => {
     if (gameState.gameStatus === 'PLAYING' && !gameState.isPaused) {
@@ -36,10 +37,10 @@ const App: React.FC = () => {
           if (prev.timeLeft <= 0) return { ...prev, gameStatus: 'LOST' };
           return { ...prev, timeLeft: prev.timeLeft - 1 };
         });
-      }, 1000);
+      }, 1000 / gameSpeed); // Timer speeds up
       return () => clearInterval(timer);
     }
-  }, [gameState.gameStatus, gameState.isPaused]);
+  }, [gameState.gameStatus, gameState.isPaused, gameSpeed]);
 
   useEffect(() => {
     if (gameState.gameStatus === 'PLAYING') {
@@ -256,6 +257,12 @@ const App: React.FC = () => {
         </div>
         <div className="flex items-center space-x-2">
           <button
+            onClick={() => setGameSpeed(prev => (prev === 1 ? 2 : prev === 2 ? 4 : 1))}
+            className={`px-3 py-1 rounded border border-zinc-600 transition-colors font-bold w-12 ${gameSpeed > 1 ? 'bg-yellow-500 text-black border-yellow-400' : 'bg-zinc-700 hover:bg-zinc-600'}`}
+          >
+            {gameSpeed === 1 ? '▶' : gameSpeed === 4 ? '⏩' : '▶▶'}
+          </button>
+          <button
             onClick={() => setGameState(p => ({ ...p, isPaused: !p.isPaused }))}
             className={`px-3 py-1 rounded border border-zinc-600 transition-colors ${gameState.isPaused ? 'bg-red-600 border-red-400' : 'bg-zinc-700 hover:bg-zinc-600'}`}
           >
@@ -274,6 +281,7 @@ const App: React.FC = () => {
         <GameCanvas
           level={level}
           gameState={gameState}
+          gameSpeed={gameSpeed}
           onUpdateState={(u) => setGameState(prev => ({ ...prev, ...u }))}
           onSlemmingExited={() => setGameState(prev => ({ ...prev, saved: prev.saved + 1 }))}
           onSlemmingDied={() => setGameState(prev => ({ ...prev, dead: prev.dead + 1 }))}

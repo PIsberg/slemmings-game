@@ -20,6 +20,7 @@ export const SKILL_ICONS: Record<SkillType, React.ReactNode> = {
   [SkillType.BASHER]: <i className="fas fa-fist-raised"></i>,
   [SkillType.MINER]: <i className="fas fa-shovel"></i>,
   [SkillType.DIGGER]: <i className="fas fa-arrow-down"></i>,
+  [SkillType.WALKER]: <i className="fas fa-walking"></i>,
 };
 
 export const SKILL_COLORS: Record<SkillType, string> = {
@@ -31,6 +32,7 @@ export const SKILL_COLORS: Record<SkillType, string> = {
   [SkillType.BASHER]: 'bg-purple-500',
   [SkillType.MINER]: 'bg-indigo-500',
   [SkillType.DIGGER]: 'bg-green-500',
+  [SkillType.WALKER]: 'bg-white text-black',
 };
 
 export const SKILL_DESCRIPTIONS: Record<SkillType, string> = {
@@ -42,4 +44,5 @@ export const SKILL_DESCRIPTIONS: Record<SkillType, string> = {
   [SkillType.BASHER]: 'BASHER: Digs horizontally.',
   [SkillType.MINER]: 'MINER: Digs diagonally down.',
   [SkillType.DIGGER]: 'DIGGER: Digs straight down.',
+  [SkillType.WALKER]: 'WALKER: Cancel any action and walk.',
 };

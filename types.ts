@@ -7,7 +7,8 @@ export enum SkillType {
   BUILDER = 'BUILDER',
   BASHER = 'BASHER',
   MINER = 'MINER',
-  DIGGER = 'DIGGER'
+  DIGGER = 'DIGGER',
+  WALKER = 'WALKER'
 }
 
 export type Point = { x: number; y: number };
@@ -20,6 +21,7 @@ export enum SlemmingState {
   BOMBER_COUNTDOWN = 'BOMBER_COUNTDOWN',
   BLOCKING = 'BLOCKING',
   BUILDING = 'BUILDING',
+  SHRUGGING = 'SHRUGGING',
   BASHING = 'BASHING',
   MINING = 'MINING',
   DIGGING = 'DIGGING',
