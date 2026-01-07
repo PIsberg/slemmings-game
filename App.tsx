@@ -195,7 +195,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#050505] flex flex-col items-center py-4 px-2 select-none overflow-hidden font-mono">
-      <div className="w-full max-w-[640px] flex justify-between items-center bg-zinc-900 p-3 rounded-t-xl border-x-4 border-t-4 border-zinc-800 text-[10px] md:text-xs">
+      <div className="w-full max-w-[1280px] flex justify-between items-center bg-zinc-900 p-3 rounded-t-xl border-x-4 border-t-4 border-zinc-800 text-[10px] md:text-xs">
         <div className="flex space-x-6">
           <div className="flex flex-col">
             <span className="text-zinc-500 uppercase text-[8px]">Saved</span>
@@ -226,16 +226,18 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      <GameCanvas
-        level={level}
-        gameState={gameState}
-        onUpdateState={(u) => setGameState(prev => ({ ...prev, ...u }))}
-        onSlemmingExited={() => setGameState(prev => ({ ...prev, saved: prev.saved + 1 }))}
-        onSlemmingDied={() => setGameState(prev => ({ ...prev, dead: prev.dead + 1 }))}
-        onSkillUsed={handleSkillUsed}
-      />
+      <div className="w-full max-w-[1280px]">
+        <GameCanvas
+          level={level}
+          gameState={gameState}
+          onUpdateState={(u) => setGameState(prev => ({ ...prev, ...u }))}
+          onSlemmingExited={() => setGameState(prev => ({ ...prev, saved: prev.saved + 1 }))}
+          onSlemmingDied={() => setGameState(prev => ({ ...prev, dead: prev.dead + 1 }))}
+          onSkillUsed={handleSkillUsed}
+        />
+      </div>
 
-      <div className="w-full max-w-[640px] bg-zinc-900 p-3 rounded-b-xl border-x-4 border-b-4 border-zinc-800 shadow-2xl">
+      <div className="w-full max-w-[1280px] bg-zinc-900 p-3 rounded-b-xl border-x-4 border-b-4 border-zinc-800 shadow-2xl">
         <div className="grid grid-cols-4 md:grid-cols-10 gap-2">
           <div className="col-span-1 flex flex-col justify-between">
             <button onClick={() => setGameState(p => ({ ...p, releaseRate: Math.min(99, p.releaseRate + 5) }))} className="bg-zinc-700 hover:bg-zinc-600 py-1 rounded text-xs">▲</button>
