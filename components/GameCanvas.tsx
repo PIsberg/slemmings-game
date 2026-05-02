@@ -30,6 +30,11 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, gameSpeed = 1, onUpdate
     gameStateRef.current = gameState;
   }, [gameState]);
 
+  const gameSpeedRef = useRef(gameSpeed);
+  useEffect(() => {
+    gameSpeedRef.current = gameSpeed;
+  }, [gameSpeed]);
+
   // Initialize terrain based on layout type
   useEffect(() => {
     const canvas = terrainCanvasRef.current;
@@ -137,17 +142,8 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, gameSpeed = 1, onUpdate
       Math.abs(s.x - x) < 15 && Math.abs(s.y - y) < 15
     );
 
-    if (target) {
-      if (currentGS.activeSkill) {
-        if (target.applySkill(currentGS.activeSkill)) {
-          onSkillUsed(currentGS.activeSkill);
-        }
-      } else {
-        // Unblock: click blocker to resume walking
-        if (target.state === SlemmingState.BLOCKING) {
-          target.state = SlemmingState.WALKING;
-        }
-      }
+    if (target && target.applySkill(currentGS.activeSkill)) {
+      onSkillUsed(currentGS.activeSkill);
     }
   };
 
@@ -174,9 +170,7 @@ const GameCanvas: React.FC<Props> = ({ level, gameState, gameSpeed = 1, onUpdate
     // Speed Loop
     const terrainData = tCtx.getImageData(0, 0, GAME_WIDTH, GAME_HEIGHT).data;
 
-    if (!gameSpeed || gameSpeed < 1) console.warn("Invalid gameSpeed:", gameSpeed);
-
-    for (let i = 0; i < (gameSpeed || 1); i++) {
+    for (let i = 0; i < gameSpeedRef.current; i++) {
       // Spawn Logic (Frame-based for FF compatibility)
       // Convert release rate logic to frame countdown (assuming ~60fps, 16ms per frame)
       // Old Formula: (105 - rate) * 12 ms

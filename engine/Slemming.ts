@@ -287,7 +287,6 @@ export class Slemming {
           return true;
         }
         break;
-        break;
       case SkillType.DIGGER:
         if (this.state === SlemmingState.WALKING) {
           this.state = SlemmingState.DIGGING;
